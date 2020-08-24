@@ -1,6 +1,7 @@
 import pygame
 # from pygame.locals import *
 from math import floor
+import numpy as np
 
 rgb_red = (255, 0, 0)
 rgb_black = (0, 0, 0)
@@ -139,7 +140,7 @@ class Grid:
                     self._hero_tile.type = 'empty'
                 self._hero_tile = tile
 
-        #self.recompute_los()
+        self.recompute_los()
 
     def get_all_tiles_in_line(self, start_location, end_location):
 
@@ -147,29 +148,31 @@ class Grid:
 
         location_diff = end_location - start_location
 
-        n_samples_on_line = location_diff[0] + location_diff[1]
+        n_samples_on_line = 2 * (abs(location_diff[0]) + abs(location_diff[1]))
+
+        print(n_samples_on_line)
 
         for i in range(n_samples_on_line):
 
             location_sample = start_location + i / (n_samples_on_line - 1) * location_diff
 
-            tile_row, tile_column = self.get_tile_from_tile_coordinates(location_sample[1], location_sample[0])
+            tile = self.get_tile_from_tile_coordinates(location_sample[0], location_sample[1])
 
-            if (tile_row, tile_column) not in intersecting_tiles:
-                intersecting_tiles.append((tile_row, tile_column))
+            if tile not in intersecting_tiles:
+                intersecting_tiles.append(tile)
 
         return intersecting_tiles
 
     def recompute_los(self):
 
-        if not self._get_hero_location_is_valid():
-            self._init_default_los()
-            return
+        self._init_default_los()
 
-        else:
+        if self._get_hero_location_is_valid():
 
-            tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_location, (0, 0))
+            tiles_in_line_from_hero = self.get_all_tiles_in_line(
+                np.array([self._hero_tile.x, self._hero_tile.y]),
+                np.array([self._tiles[0].x, self._tiles[0].y]))
 
             for tile in tiles_in_line_from_hero:
-
-                self._cell_los[tile[0]][tile[1]] = 'los'
+                if tile is not None:
+                    tile.los = True
