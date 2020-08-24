@@ -59,18 +59,18 @@ class App:
                 self.on_right_button_down(event)
 
     def on_left_button_down(self, event):
-        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
-        self.Grid.set_tile_type(row, col, 'hero')
+        tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(tile, 'hero')
         self.Grid.draw_cells(self._display_surf)
 
     def on_middle_button_down(self, event):
-        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
-        self.Grid.set_tile_type(row, col, 'monster')
+        tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(tile, 'monster')
         self.Grid.draw_cells(self._display_surf)
 
     def on_right_button_down(self, event):
-        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
-        self.Grid.set_tile_type(row, col, 'obstacle')
+        tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(tile, 'obstacle')
         self.Grid.draw_cells(self._display_surf)
 
     def on_loop(self):
