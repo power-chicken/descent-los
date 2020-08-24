@@ -13,7 +13,7 @@ class App:
         self.size = self.weight, self.height = 640, 500
         self.Grid = None
         self.clock = pygame.time.Clock()
-        self._fps = 3
+        self._fps = 15
 
     def on_init(self):
         pygame.init()
@@ -30,18 +30,26 @@ class App:
             self._running = False
         elif event.type == MOUSEBUTTONDOWN:
             if event.button == 1:
-                self.on_lbutton_down(event)
+                self.on_left_button_down(event)
             elif event.button == 2:
-                self.on_mbutton_down(event)
+                self.on_middle_button_down(event)
             elif event.button == 3:
-                self.on_rbutton_down(event)
+                self.on_right_button_down(event)
 
-    def on_lbutton_down(self, event):
-        print("l")
-    def on_mbutton_down(self, event):
-        print("m")
-    def on_rbutton_down(self, event):
-        print("r")
+    def on_left_button_down(self, event):
+        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(row, col, 'hero')
+        self.Grid.draw_cells(self._display_surf)
+
+    def on_middle_button_down(self, event):
+        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(row, col, 'monster')
+        self.Grid.draw_cells(self._display_surf)
+
+    def on_right_button_down(self, event):
+        row, col = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+        self.Grid.set_tile_type(row, col, 'obstacle')
+        self.Grid.draw_cells(self._display_surf)
 
     def on_loop(self):
         self.clock.tick(self._fps)
