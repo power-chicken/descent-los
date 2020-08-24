@@ -1,40 +1,43 @@
-import pygame, sys
+import pygame
 from pygame.locals import *
 
-# Initialize program
-pygame.init()
 
-# Assign FPS a value
-FPS = 30
-FramePerSec = pygame.time.Clock()
+class App:
+    def __init__(self):
+        self._running = True
+        self._display_surf = None
+        self.size = self.weight, self.height = 640, 400
 
-# Setting up color objects
-BLUE = (0, 0, 255)
-RED = (255, 0, 0)
-GREEN = (0, 255, 0)
-BLACK = (0, 0, 0)
-WHITE = (255, 255, 255)
+    def on_init(self):
+        pygame.init()
+        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
+        self._running = True
 
-# Setup a 300x300 pixel display with caption
-DISPLAYSURF = pygame.display.set_mode((600, 600))
-DISPLAYSURF.fill(WHITE)
-pygame.display.set_caption("Example")
+    def on_event(self, event):
+        if event.type == pygame.QUIT:
+            self._running = False
 
-# Creating Lines and Shapes
-pygame.draw.line(DISPLAYSURF, BLUE, (150, 130), (130, 170))
-pygame.draw.line(DISPLAYSURF, BLUE, (150, 130), (170, 170))
-pygame.draw.line(DISPLAYSURF, GREEN, (130, 170), (170, 170))
-pygame.draw.circle(DISPLAYSURF, BLACK, (100, 50), 30)
-pygame.draw.circle(DISPLAYSURF, BLACK, (200, 50), 30)
-pygame.draw.rect(DISPLAYSURF, RED, (100, 200, 100, 50), 2)
-pygame.draw.rect(DISPLAYSURF, BLACK, (110, 260, 80, 5))
+    def on_loop(self):
+        pass
 
-# Beginning Game Loop
-while True:
-    pygame.display.update()
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            pygame.quit()
-            sys.exit()
+    def on_render(self):
+        pass
 
-    FramePerSec.tick(FPS)
+    def on_cleanup(self):
+        pygame.quit()
+
+    def on_execute(self):
+        if self.on_init() == False:
+            self._running = False
+
+        while (self._running):
+            for event in pygame.event.get():
+                self.on_event(event)
+            self.on_loop()
+            self.on_render()
+        self.on_cleanup()
+
+
+if __name__ == "__main__":
+    theApp = App()
+    theApp.on_execute()
