@@ -21,7 +21,7 @@ class App:
         self.Grid = Grid()
         self._running = True
         self._display_surf.fill(white)
-        self.Grid.draw(self._display_surf)
+        self.Grid.draw_grid_lines(self._display_surf)
         self.Grid.draw_cells(self._display_surf)
 
         pygame.display.set_caption("Descent Line of Sight Checker!")

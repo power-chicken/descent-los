@@ -1,5 +1,5 @@
 import pygame
-from pygame.locals import *
+# from pygame.locals import *
 from math import floor
 
 rgb_red = (255, 0, 0)
@@ -19,9 +19,11 @@ class Grid:
 
         self._distance_from_window = 5
 
-        self._cells = [['empty' for i in range(self._n_rows)] for j in range(self._n_columns)]
+        self._cells = [['empty' for _ in range(self._n_columns)] for _ in range(self._n_rows)]
 
-    def draw(self, pygame_display_surf):
+        self._hero_location = (-1, -1)  # there can be only one hero
+
+    def draw_grid_lines(self, pygame_display_surf):
 
         for i_row in range(self._n_rows):
             for i_col in range(self._n_columns):
@@ -35,7 +37,7 @@ class Grid:
         for i_row in range(self._n_rows):
             for i_col in range(self._n_columns):
 
-                cell_type = self._cells[i_col][i_row]
+                cell_type = self._cells[i_row][i_col]
 
                 if cell_type == 'empty':
                     cell_color = rgb_gray
@@ -61,12 +63,21 @@ class Grid:
 
         return tile_row, tile_column
 
+    def is_tile_location_valid(self, tile_row, tile_column):
+
+        return 0 <= tile_row < self._n_rows and 0 <= tile_column < self._n_columns
+
     def set_tile_type(self, tile_row, tile_column, tile_type):
 
-        if tile_row < 0 or tile_row >= self._n_rows or tile_column < 0 or tile_column >= self._n_columns:
+        if not self.is_tile_location_valid(tile_row, tile_column):
             return
 
-        if self._cells[tile_column][tile_row] == tile_type:
-            self._cells[tile_column][tile_row] = 'empty'
+        if self._cells[tile_row][tile_column] == tile_type:
+            self._cells[tile_row][tile_column] = 'empty'
         else:
-            self._cells[tile_column][tile_row] = tile_type
+            self._cells[tile_row][tile_column] = tile_type
+
+        if tile_type == 'hero':
+            if self.is_tile_location_valid(self._hero_location[0], self._hero_location[1]):
+                self._cells[self._hero_location[0]][self._hero_location[1]] = 'empty'
+            self._hero_location = (tile_row, tile_column)
