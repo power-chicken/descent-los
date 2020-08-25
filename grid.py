@@ -93,7 +93,7 @@ class Grid:
         # draw parameter
         self._square_size = 40
         self._grid_line_width = 3
-        self._distance_from_window = 5
+        self._distance_from_window = 0
 
         self._tiles = [Tile(x, y, pygame_display_surf) for x in range(self._n_tiles_x) for y in range(self._n_tiles_y)]
 
@@ -188,9 +188,9 @@ class Grid:
 
         if self._get_hero_location_is_valid():
 
-            tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_tile.get_center(),
-                                                                 self._tiles[0].get_center())
+            for target_tile in self._tiles:
+                tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_tile.get_center(),
+                                                                     target_tile.get_center())
 
-            for tile in tiles_in_line_from_hero:
-                if tile is not None:
-                    tile.los = True
+                target_tile.los = not any(tile.type == 'obstacle'
+                                          or tile.type == 'monster' for tile in tiles_in_line_from_hero)
