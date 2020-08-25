@@ -79,6 +79,11 @@ class Tile:
 
         return np.array([self.pos_left + self.width, self.pos_top + self.height])
 
+    def get_all_corners(self):
+
+        return [self.get_top_left_corner(), self.get_top_right_corner(),
+                self.get_bottom_left_corner(), self.get_bottom_right_corner()]
+
     def get_center(self):
 
         return np.array([self.pos_left + self.width / 2, self.pos_top + self.height / 2])
@@ -177,7 +182,7 @@ class Grid:
 
             tile = self.get_tile_from_pixel(location_sample)
 
-            if tile not in intersecting_tiles:
+            if tile not in intersecting_tiles and tile is not None:
                 intersecting_tiles.append(tile)
 
         return intersecting_tiles
@@ -189,8 +194,20 @@ class Grid:
         if self._get_hero_location_is_valid():
 
             for target_tile in self._tiles:
+
+                # center -> center rule
                 tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_tile.get_center(),
                                                                      target_tile.get_center())
 
                 target_tile.los = not any(tile.type == 'obstacle'
                                           or tile.type == 'monster' for tile in tiles_in_line_from_hero)
+
+                if not target_tile.los:
+                    # corner -> corner rule
+                    for hero_tile_corner in self._hero_tile.get_all_corners():
+                        for target_tile_corner in target_tile.get_all_corners():
+                            tiles_in_line_from_hero = self.get_all_tiles_in_line(hero_tile_corner,
+                                                                                 target_tile_corner)
+
+                            target_tile.los = not any(tile.type == 'obstacle'
+                                                      or tile.type == 'monster' for tile in tiles_in_line_from_hero)
