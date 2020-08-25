@@ -14,13 +14,23 @@ rgb_yellow = (0, 255, 255)
 
 class Tile:
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, pygame_display_surf):
 
         self.x = x
         self.y = y
 
         self.los = False
         self.type = 'empty'
+
+        self.pygame_display_surf = pygame_display_surf
+
+        self.width = 40
+        self.height = 40
+
+        self.pos_left = x * self.width
+        self.pos_top = y * self.height
+
+        self.grid_line_width = 3
 
     def get_outer_color(self):
 
@@ -41,10 +51,43 @@ class Tile:
         else:
             return rgb_red
 
+    def draw(self):
+
+        pygame.draw.rect(self.pygame_display_surf, rgb_black,
+                         (self.pos_left, self.pos_top, self.width, self.height), self.grid_line_width)
+
+        pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
+                         (self.pos_left + 2, self.pos_top + 2, self.width - 4, self.height - 4), 0)
+
+        if self.los:
+            pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
+                             (self.pos_left + 8, self.pos_top + 8, self.width - 16, self.height - 16), 0)
+
+    def get_top_left_corner(self):
+
+        return np.array([self.pos_left, self.pos_top])
+
+    def get_top_right_corner(self):
+
+        return np.array([self.pos_left + self.width, self.pos_top])
+
+    def get_bottom_left_corner(self):
+
+        return np.array([self.pos_left, self.pos_top + self.height])
+
+    def get_bottom_right_corner(self):
+
+        return np.array([self.pos_left + self.width, self.pos_top + self.height])
+
+    def get_center(self):
+
+        return np.array([self.pos_left + self.width / 2, self.pos_top + self.height / 2])
+
 
 class Grid:
 
-    def __init__(self):
+    def __init__(self, pygame_display_surf):
+
         self._n_tiles_x, self._n_tiles_y = 12, 10
 
         # draw parameter
@@ -52,7 +95,7 @@ class Grid:
         self._grid_line_width = 3
         self._distance_from_window = 5
 
-        self._tiles = [Tile(x, y) for x in range(self._n_tiles_x) for y in range(self._n_tiles_y)]
+        self._tiles = [Tile(x, y, pygame_display_surf) for x in range(self._n_tiles_x) for y in range(self._n_tiles_y)]
 
         self._hero_tile = None
 
@@ -65,31 +108,10 @@ class Grid:
 
         return self._hero_tile is not None
 
-    def draw_grid_lines(self, pygame_display_surf):
+    def draw_all_tiles(self):
 
         for tile in self._tiles:
-            pygame.draw.rect(pygame_display_surf, rgb_black,
-                             (self._distance_from_window + tile.x * self._square_size,
-                              self._distance_from_window + tile.y * self._square_size,
-                              self._square_size,
-                              self._square_size), self._grid_line_width)
-
-    def draw_cells(self, pygame_display_surf):
-
-        for tile in self._tiles:
-
-            pygame.draw.rect(pygame_display_surf, tile.get_outer_color(),
-                             (self._distance_from_window + tile.x * self._square_size + 2,
-                              self._distance_from_window + tile.y * self._square_size + 2,
-                              self._square_size - 4,
-                              self._square_size - 4), 0)
-
-            if tile.los:
-                pygame.draw.rect(pygame_display_surf, tile.get_inner_color(),
-                                 (self._distance_from_window + tile.x * self._square_size + 8,
-                                  self._distance_from_window + tile.y * self._square_size + 8,
-                                  self._square_size - 16,
-                                  self._square_size - 16), 0)
+            tile.draw()
 
     def get_tile_coordinates_from_pixel(self, cursor_pos):
 
@@ -136,7 +158,6 @@ class Grid:
             # if a new hero location is set, make the old empty and set new reference
             if new_tile_type == 'hero':
                 if self._get_hero_location_is_valid():
-
                     self._hero_tile.type = 'empty'
                 self._hero_tile = tile
 
@@ -148,15 +169,13 @@ class Grid:
 
         location_diff = end_location - start_location
 
-        n_samples_on_line = 2 * (abs(location_diff[0]) + abs(location_diff[1]))
-
-        print(n_samples_on_line)
+        n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / self._square_size)
 
         for i in range(n_samples_on_line):
 
             location_sample = start_location + i / (n_samples_on_line - 1) * location_diff
 
-            tile = self.get_tile_from_tile_coordinates(location_sample[0], location_sample[1])
+            tile = self.get_tile_from_pixel(location_sample)
 
             if tile not in intersecting_tiles:
                 intersecting_tiles.append(tile)
@@ -169,9 +188,8 @@ class Grid:
 
         if self._get_hero_location_is_valid():
 
-            tiles_in_line_from_hero = self.get_all_tiles_in_line(
-                np.array([self._hero_tile.x, self._hero_tile.y]),
-                np.array([self._tiles[0].x, self._tiles[0].y]))
+            tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_tile.get_center(),
+                                                                 self._tiles[0].get_center())
 
             for tile in tiles_in_line_from_hero:
                 if tile is not None:

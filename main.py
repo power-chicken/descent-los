@@ -29,11 +29,10 @@ class App:
     def on_init(self):
         pygame.init()
         self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.Grid = Grid()
+        self.Grid = Grid(self._display_surf)
         self._running = True
         self._display_surf.fill(rgb_white)
-        self.Grid.draw_grid_lines(self._display_surf)
-        self.Grid.draw_cells(self._display_surf)
+        self.Grid.draw_all_tiles()
 
         pygame.display.set_caption("Descent Line of Sight Checker!")
 
@@ -61,17 +60,17 @@ class App:
     def on_left_button_down(self, event):
         tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
         self.Grid.set_tile_type(tile, 'hero')
-        self.Grid.draw_cells(self._display_surf)
+        self.Grid.draw_all_tiles()
 
     def on_middle_button_down(self, event):
         tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
         self.Grid.set_tile_type(tile, 'monster')
-        self.Grid.draw_cells(self._display_surf)
+        self.Grid.draw_all_tiles()
 
     def on_right_button_down(self, event):
         tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
         self.Grid.set_tile_type(tile, 'obstacle')
-        self.Grid.draw_cells(self._display_surf)
+        self.Grid.draw_all_tiles()
 
     def on_loop(self):
         self.clock.tick(self._fps)
