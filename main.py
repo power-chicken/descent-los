@@ -43,7 +43,7 @@ class App:
         self._display_surf.blit(self._text_monster_surface, (self.width - 300, 150))
 
         self._text_obstacle_surface = self._system_font.render("Obstacle position (right mouse button)", True,
-                                                               rgb_green)
+                                                               rgb_black)
         self._display_surf.blit(self._text_obstacle_surface, (self.width - 300, 200))
 
     def on_event(self, event):
