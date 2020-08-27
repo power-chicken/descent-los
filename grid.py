@@ -162,7 +162,7 @@ class Grid:
 
     def set_tile_type(self, tile, new_tile_type):
 
-        # only do something when requesting a valid location
+        # only do something when requesting a valid tile
         if tile is None:
             return
 
@@ -175,6 +175,9 @@ class Grid:
                 self._hero_tile = None
 
         else:
+            if tile is self._hero_tile:
+                self._hero_tile = None
+
             tile.type = new_tile_type
 
             # if a new hero location is set, make the old empty and set new reference
