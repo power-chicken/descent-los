@@ -27,10 +27,15 @@ class Tile:
         self.width = 40
         self.height = 40
 
-        self.pos_left = x * self.width
-        self.pos_top = y * self.height
-
         self.grid_line_width = 3
+
+    def get_left_pixel_value(self):
+
+        return self.x * self.width
+
+    def get_top_pixel_value(self):
+
+        return self.y * self.height
 
     def get_outer_color(self):
 
@@ -54,14 +59,14 @@ class Tile:
     def draw(self):
 
         pygame.draw.rect(self.pygame_display_surf, rgb_black,
-                         (self.pos_left, self.pos_top, self.width, self.height), self.grid_line_width)
+                         (self.get_left_pixel_value(), self.get_top_pixel_value(), self.width, self.height), self.grid_line_width)
 
         pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
-                         (self.pos_left + 2, self.pos_top + 2, self.width - 4, self.height - 4), 0)
+                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4, self.height - 4), 0)
 
         if self.los:
             pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                             (self.pos_left + 15, self.pos_top + 15, self.width - 30, self.height - 30), 0)
+                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30, self.height - 30), 0)
 
     def get_top_left_corner(self):
 
@@ -86,7 +91,7 @@ class Tile:
 
     def get_center(self):
 
-        return np.array([self.pos_left + self.width / 2, self.pos_top + self.height / 2])
+        return np.array([self.get_left_pixel_value() + self.width / 2, self.get_top_pixel_value() + self.height / 2])
 
 
 class Grid:
