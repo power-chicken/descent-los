@@ -2,7 +2,6 @@ import pygame
 from pygame.locals import *
 from grid import *
 
-
 rgb_red = (255, 0, 0)
 rgb_black = (0, 0, 0)
 rgb_blue = (0, 0, 255)
@@ -43,7 +42,8 @@ class App:
         self._text_monster_surface = self._system_font.render("Monster position (middle mouse button)", True, rgb_red)
         self._display_surf.blit(self._text_monster_surface, (self.width - 300, 150))
 
-        self._text_obstacle_surface = self._system_font.render("Obstacle position (right mouse button)", True, rgb_green)
+        self._text_obstacle_surface = self._system_font.render("Obstacle position (right mouse button)", True,
+                                                               rgb_green)
         self._display_surf.blit(self._text_obstacle_surface, (self.width - 300, 200))
 
     def on_event(self, event):

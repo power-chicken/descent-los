@@ -9,7 +9,7 @@ rgb_blue = (0, 0, 255)
 rgb_white = (255, 255, 255)
 rgb_green = (0, 255, 0)
 rgb_gray = (100, 100, 100)
-rgb_yellow = (0, 255, 255)
+rgb_yellow = (255, 255, 0)
 
 
 class Tile:
@@ -41,7 +41,7 @@ class Tile:
         elif self.type == 'monster':
             return rgb_red
         elif self.type == 'obstacle':
-            return rgb_green
+            return rgb_black
         else:
             return rgb_white
 
@@ -61,23 +61,23 @@ class Tile:
 
         if self.los:
             pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                             (self.pos_left + 8, self.pos_top + 8, self.width - 16, self.height - 16), 0)
+                             (self.pos_left + 15, self.pos_top + 15, self.width - 30, self.height - 30), 0)
 
     def get_top_left_corner(self):
 
-        return np.array([self.pos_left, self.pos_top])
+        return np.array([self.x, self.y])
 
     def get_top_right_corner(self):
 
-        return np.array([self.pos_left + self.width, self.pos_top])
+        return np.array([self.x + 1, self.y])
 
     def get_bottom_left_corner(self):
 
-        return np.array([self.pos_left, self.pos_top + self.height])
+        return np.array([self.x, self.y + 1])
 
     def get_bottom_right_corner(self):
 
-        return np.array([self.pos_left + self.width, self.pos_top + self.height])
+        return np.array([self.x + 1, self.y + 1])
 
     def get_all_corners(self):
 
@@ -93,20 +93,33 @@ class Grid:
 
     def __init__(self, pygame_display_surf):
 
-        self._n_tiles_x, self._n_tiles_y = 12, 10
+        self._n_tiles_x, self._n_tiles_y = 8, 8
 
         # draw parameter
         self._square_size = 40
         self._grid_line_width = 3
         self._distance_from_window = 0
 
-        self._tiles = [Tile(x, y, pygame_display_surf) for x in range(self._n_tiles_x) for y in range(self._n_tiles_y)]
+        self._tiles = [[Tile(x, y, pygame_display_surf) for y in range(self._n_tiles_y)]
+                       for x in range(self._n_tiles_x)]
 
         self._hero_tile = None
 
+        self.use_rule_center_to_center = False
+        self.use_rule_corner_to_corner = True
+
+    def get_all_tiles_as_1d_list(self):
+
+        tile_list = []
+        for tile_line in self._tiles:
+            for tile in tile_line:
+                tile_list.append(tile)
+
+        return tile_list
+
     def _init_default_los(self):
 
-        for tile in self._tiles:
+        for tile in self.get_all_tiles_as_1d_list():
             tile.los = False
 
     def _get_hero_location_is_valid(self):
@@ -115,7 +128,7 @@ class Grid:
 
     def draw_all_tiles(self):
 
-        for tile in self._tiles:
+        for tile in self.get_all_tiles_as_1d_list():
             tile.draw()
 
     def get_tile_coordinates_from_pixel(self, cursor_pos):
@@ -127,11 +140,10 @@ class Grid:
 
     def get_tile_from_tile_coordinates(self, x_coord, y_coord):
 
-        for tile in self._tiles:
-            if floor(x_coord) == tile.x and floor(y_coord) == tile.y:
-                return tile
-
-        return None
+        if self.is_tile_location_valid(floor(x_coord), floor(y_coord)):
+            return self._tiles[floor(x_coord)][floor(y_coord)]
+        else:
+            return None
 
     def get_tile_from_pixel(self, cursor_pos):
 
@@ -168,7 +180,7 @@ class Grid:
 
         self.recompute_los()
 
-    def get_all_tiles_in_line(self, start_location, end_location):
+    def get_all_tiles_in_line_by_sampling_pixels(self, start_location, end_location):
 
         intersecting_tiles = []
 
@@ -187,27 +199,90 @@ class Grid:
 
         return intersecting_tiles
 
+    def get_all_tiles_in_line_discrete(self, start_corner, end_corner):
+
+        intersecting_tiles = []
+
+        location_diff = end_corner - start_corner
+
+        if location_diff[0] == 0:
+            return self.get_all_tiles_along_vertical_line(start_corner, location_diff[1])
+        elif location_diff[1] == 0:
+            return self.get_all_tiles_along_horizontal_line(start_corner, location_diff[0])
+        else:
+            return None
+
+    def get_all_tiles_along_vertical_line(self, start_corner, n_tiles_in_y_direction):
+
+        tiles_along_vertical_line = []
+
+        trace_downwards = n_tiles_in_y_direction > 0
+
+        incrementer = 1 if trace_downwards else -1
+
+        for i in range(0, n_tiles_in_y_direction, incrementer):
+            for x_add in [-1, 0]:  # this results in checks left and right from the line
+
+                x = start_corner[0] + x_add
+                y = start_corner[1] + i
+                if not trace_downwards:
+                    y += -1
+
+                if self.is_tile_location_valid(x, y):
+                    tiles_along_vertical_line.append(self._tiles[x][y])
+
+        return tiles_along_vertical_line
+
+    def get_all_tiles_along_horizontal_line(self, start_corner, n_tiles_in_x_direction):
+
+        tiles_along_horizontal_line = []
+
+        trace_right = n_tiles_in_x_direction > 0
+
+        incrementer = 1 if trace_right else -1
+
+        for i in range(0, n_tiles_in_x_direction, incrementer):
+            for y_add in [-1, 0]:  # this results in checks up and down from the line
+
+                x = start_corner[0] + i
+                y = start_corner[1] + y_add
+                if not trace_right:
+                    x += -1
+
+                if self.is_tile_location_valid(x, y):
+                    tiles_along_horizontal_line.append(self._tiles[x][y])
+
+        return tiles_along_horizontal_line
+
     def recompute_los(self):
 
         self._init_default_los()
 
         if self._get_hero_location_is_valid():
 
-            for target_tile in self._tiles:
+            for target_tile in self.get_all_tiles_as_1d_list():
 
-                # center -> center rule
-                tiles_in_line_from_hero = self.get_all_tiles_in_line(self._hero_tile.get_center(),
-                                                                     target_tile.get_center())
+                if target_tile is self._hero_tile:
+                    continue
 
-                target_tile.los = not any(tile.type == 'obstacle'
-                                          or tile.type == 'monster' for tile in tiles_in_line_from_hero)
+                if self.use_rule_center_to_center:
+                    tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
+                        self._hero_tile.get_center(),
+                        target_tile.get_center())
 
-                if not target_tile.los:
-                    # corner -> corner rule
+                    target_tile.los = not any(tile.type == 'obstacle'
+                                              or tile.type == 'monster' for tile in tiles_in_line_from_hero)
+
+                if self.use_rule_corner_to_corner:
                     for hero_tile_corner in self._hero_tile.get_all_corners():
                         for target_tile_corner in target_tile.get_all_corners():
-                            tiles_in_line_from_hero = self.get_all_tiles_in_line(hero_tile_corner,
-                                                                                 target_tile_corner)
+                            if not target_tile.los:
+                                tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
+                                                                                              target_tile_corner)
 
-                            target_tile.los = not any(tile.type == 'obstacle'
-                                                      or tile.type == 'monster' for tile in tiles_in_line_from_hero)
+                                if tiles_in_line_from_hero is not None:
+                                    target_tile.los = not any(tile.type == 'obstacle'
+                                                              or tile.type == 'monster'
+                                                              or tile.type == 'hero'
+                                                              for tile in
+                                                              tiles_in_line_from_hero)
