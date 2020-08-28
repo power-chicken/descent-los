@@ -1,6 +1,6 @@
 import pygame
 # from pygame.locals import *
-from math import floor
+from math import floor, isclose, ceil
 import numpy as np
 
 rgb_red = (255, 0, 0)
@@ -66,9 +66,9 @@ class Tile:
                          (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4,
                           self.height - 4), 0)
 
-        pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                         (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
-                          self.height - 30), 0)
+        # pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
+        #                  (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
+        #                   self.height - 30), 0)
 
         system_font = pygame.font.SysFont("comicsansms", size=16)
         text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
@@ -99,6 +99,11 @@ class Tile:
     def get_center(self):
 
         return np.array([self.get_left_pixel_value() + self.width / 2, self.get_top_pixel_value() + self.height / 2])
+
+
+def is_value_almost_integer(value):
+
+    return isclose(value, floor(value)) or isclose(value, ceil(value))
 
 
 class Grid:
@@ -216,20 +221,18 @@ class Grid:
 
     def get_all_tiles_in_line_discrete(self, start_corner, end_corner):
 
-        intersecting_tiles = []
-
         corner_diff = end_corner - start_corner
 
         if corner_diff[0] == 0:
             return self.get_all_tiles_along_vertical_line(start_corner, corner_diff[1])
         elif corner_diff[1] == 0:
             return self.get_all_tiles_along_horizontal_line(start_corner, corner_diff[0])
-        if abs(corner_diff[0]) == abs(corner_diff[1]):
+        elif abs(corner_diff[0]) == abs(corner_diff[1]):
             if corner_diff[0] == 0:
                 return None
             return self.get_all_tiles_along_diagonal_line(start_corner, corner_diff)
         else:
-            return None
+            return self.get_all_tiles_along_non_grid_parallel_line(start_corner, corner_diff)
 
     def get_all_tiles_along_vertical_line(self, start_corner, n_tiles_in_y_direction):
 
@@ -296,7 +299,64 @@ class Grid:
 
     def get_all_tiles_along_non_grid_parallel_line(self, start_corner, difference_vector):
 
+        if difference_vector[0] == 0 or difference_vector[1] == 0:
+            return None
+
         tiles_along_line = []
+
+        # get cuts with vertical grid lines
+        trace_right = difference_vector[0] > 0
+        incrementer = 1 if trace_right else -1
+
+        # print("start corner = ", start_corner[0], start_corner[1])
+        # print("target corner = ", start_corner[0] + difference_vector[0], start_corner[1] + difference_vector[1])
+
+        for i in range(incrementer, difference_vector[0], incrementer):
+
+            x = i
+            y = difference_vector[1] / difference_vector[0] * x
+
+            # print("hit grid line at = ", start_corner[0] + x, start_corner[1] + y)
+            if is_value_almost_integer(y):  # that would mean we hit a grid corner, that does not produce a hit
+                continue
+
+            y_tile = floor(y)
+            # if difference_vector[1] < 0:
+            #     y_tile += -1
+
+            # print("left tile", start_corner[0] + x - 1, start_corner[1] + y_tile)
+            tile = self._tiles[start_corner[0] + x - 1][start_corner[1] + y_tile]  # left tile
+            if tile not in tiles_along_line:
+                tiles_along_line.append(tile)
+
+            # print("right tile", start_corner[0] + x, start_corner[1] + y_tile)
+            tile = self._tiles[start_corner[0] + x][start_corner[1] + y_tile]  # right tile
+            if tile not in tiles_along_line:
+                tiles_along_line.append(tile)
+
+        # get cuts with horizontal grid lines
+        trace_down = difference_vector[1] > 0
+        incrementer = 1 if trace_down else -1
+
+        for i in range(incrementer, difference_vector[1], incrementer):
+
+            y = i
+            x = difference_vector[0] / difference_vector[1] * y
+
+            if is_value_almost_integer(x):  # that would mean we hit a grid corner, that does not produce a hit
+                continue
+
+            x_tile = floor(x)
+            # if difference_vector[0] < 0:
+            #     x_tile += -1
+
+            tile = self._tiles[start_corner[0] + x_tile][start_corner[1] + y - 1]  # top tile
+            if tile not in tiles_along_line:
+                tiles_along_line.append(tile)
+
+            tile = self._tiles[start_corner[0] + x_tile][start_corner[1] + y]  # bottom tile
+            if tile not in tiles_along_line:
+                tiles_along_line.append(tile)
 
         return tiles_along_line
 
@@ -327,6 +387,8 @@ class Grid:
                                                                                       target_tile_corner)
 
                         if tiles_in_line_from_hero is None:
+                            continue
+                        if target_tile in tiles_in_line_from_hero:
                             continue
                         if not any(tile.type == 'obstacle'
                                    or tile.type == 'monster'
