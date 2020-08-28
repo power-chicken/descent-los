@@ -19,7 +19,7 @@ class Tile:
         self.x = x
         self.y = y
 
-        self.los = False
+        self.n_lines_see_this_tile = 0
         self.type = 'empty'
 
         self.pygame_display_surf = pygame_display_surf
@@ -51,7 +51,7 @@ class Tile:
             return rgb_white
 
     def get_inner_color(self):
-        if self.los:
+        if self.n_lines_see_this_tile > 0:
             return rgb_yellow
         else:
             return rgb_red
@@ -59,14 +59,21 @@ class Tile:
     def draw(self):
 
         pygame.draw.rect(self.pygame_display_surf, rgb_black,
-                         (self.get_left_pixel_value(), self.get_top_pixel_value(), self.width, self.height), self.grid_line_width)
+                         (self.get_left_pixel_value(), self.get_top_pixel_value(), self.width, self.height),
+                         self.grid_line_width)
 
         pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
-                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4, self.height - 4), 0)
+                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4,
+                          self.height - 4), 0)
 
-        if self.los:
-            pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30, self.height - 30), 0)
+        pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
+                         (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
+                          self.height - 30), 0)
+
+        system_font = pygame.font.SysFont("comicsansms", size=16)
+        text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
+        self.pygame_display_surf.blit(text_hero_surface,
+                                      (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 7))
 
     def get_top_left_corner(self):
 
@@ -125,7 +132,7 @@ class Grid:
     def _init_default_los(self):
 
         for tile in self.get_all_tiles_as_1d_list():
-            tile.los = False
+            tile.n_lines_see_this_tile = 0
 
     def _get_hero_location_is_valid(self):
 
@@ -211,12 +218,16 @@ class Grid:
 
         intersecting_tiles = []
 
-        location_diff = end_corner - start_corner
+        corner_diff = end_corner - start_corner
 
-        if location_diff[0] == 0:
-            return self.get_all_tiles_along_vertical_line(start_corner, location_diff[1])
-        elif location_diff[1] == 0:
-            return self.get_all_tiles_along_horizontal_line(start_corner, location_diff[0])
+        if corner_diff[0] == 0:
+            return self.get_all_tiles_along_vertical_line(start_corner, corner_diff[1])
+        elif corner_diff[1] == 0:
+            return self.get_all_tiles_along_horizontal_line(start_corner, corner_diff[0])
+        if abs(corner_diff[0]) == abs(corner_diff[1]):
+            if corner_diff[0] == 0:
+                return None
+            return self.get_all_tiles_along_diagonal_line(start_corner, corner_diff)
         else:
             return None
 
@@ -262,35 +273,63 @@ class Grid:
 
         return tiles_along_horizontal_line
 
+    def get_all_tiles_along_diagonal_line(self, start_corner, difference_vector):
+
+        tiles_along_line = []
+
+        if abs(difference_vector[0]) != abs(difference_vector[1]):
+            raise RuntimeError("invalid use of this function.")
+
+        n_tiles_crossed_by_the_line = abs(difference_vector[0])
+        direction = difference_vector // n_tiles_crossed_by_the_line
+
+        x_sum = -1 if direction[0] == -1 else 0
+        y_sum = -1 if direction[1] == -1 else 0
+
+        for i in range(n_tiles_crossed_by_the_line):
+            x = start_corner[0] + i * direction[0] + x_sum
+            y = start_corner[1] + i * direction[1] + y_sum
+
+            tiles_along_line.append(self._tiles[x][y])
+
+        return tiles_along_line
+
+    def get_all_tiles_along_non_grid_parallel_line(self, start_corner, difference_vector):
+
+        tiles_along_line = []
+
+        return tiles_along_line
+
     def recompute_los(self):
 
         self._init_default_los()
 
-        if self._get_hero_location_is_valid():
+        if not self._get_hero_location_is_valid():
+            return
 
-            for target_tile in self.get_all_tiles_as_1d_list():
+        for target_tile in self.get_all_tiles_as_1d_list():
+            if target_tile is self._hero_tile:
+                continue
 
-                if target_tile is self._hero_tile:
-                    continue
+            if self.use_rule_center_to_center:
+                tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
+                    self._hero_tile.get_center(),
+                    target_tile.get_center())
 
-                if self.use_rule_center_to_center:
-                    tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
-                        self._hero_tile.get_center(),
-                        target_tile.get_center())
+                if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
+                    target_tile.n_lines_see_this_tile += 1
 
-                    target_tile.los = not any(tile.type == 'obstacle'
-                                              or tile.type == 'monster' for tile in tiles_in_line_from_hero)
+            if self.use_rule_corner_to_corner:
+                for hero_tile_corner in self._hero_tile.get_all_corners():
+                    for target_tile_corner in target_tile.get_all_corners():
 
-                if self.use_rule_corner_to_corner:
-                    for hero_tile_corner in self._hero_tile.get_all_corners():
-                        for target_tile_corner in target_tile.get_all_corners():
-                            if not target_tile.los:
-                                tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
-                                                                                              target_tile_corner)
+                        tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
+                                                                                      target_tile_corner)
 
-                                if tiles_in_line_from_hero is not None:
-                                    target_tile.los = not any(tile.type == 'obstacle'
-                                                              or tile.type == 'monster'
-                                                              or tile.type == 'hero'
-                                                              for tile in
-                                                              tiles_in_line_from_hero)
+                        if tiles_in_line_from_hero is None:
+                            continue
+                        if not any(tile.type == 'obstacle'
+                                   or tile.type == 'monster'
+                                   or tile.type == 'hero'
+                                   for tile in tiles_in_line_from_hero):
+                            target_tile.n_lines_see_this_tile += 1
