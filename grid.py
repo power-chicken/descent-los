@@ -1,15 +1,7 @@
 import pygame
-# from pygame.locals import *
-from math import floor, isclose, ceil
 import numpy as np
-
-rgb_red = (255, 0, 0)
-rgb_black = (0, 0, 0)
-rgb_blue = (0, 0, 255)
-rgb_white = (255, 255, 255)
-rgb_green = (0, 255, 0)
-rgb_gray = (100, 100, 100)
-rgb_yellow = (255, 255, 0)
+from global_constants import *
+from aux_functions import *
 
 
 class Tile:
@@ -101,11 +93,6 @@ class Tile:
         return np.array([self.get_left_pixel_value() + self.width / 2, self.get_top_pixel_value() + self.height / 2])
 
 
-def is_value_almost_integer(value):
-
-    return isclose(value, floor(value)) or isclose(value, ceil(value))
-
-
 class Grid:
 
     def __init__(self, pygame_display_surf):
@@ -124,6 +111,7 @@ class Grid:
 
         self.use_rule_center_to_center = False
         self.use_rule_corner_to_corner = True
+        self.draw_text_n_lines_hit_this_tile = False
 
     def get_all_tiles_as_1d_list(self):
 
@@ -308,28 +296,20 @@ class Grid:
         trace_right = difference_vector[0] > 0
         incrementer = 1 if trace_right else -1
 
-        # print("start corner = ", start_corner[0], start_corner[1])
-        # print("target corner = ", start_corner[0] + difference_vector[0], start_corner[1] + difference_vector[1])
-
         for i in range(incrementer, difference_vector[0], incrementer):
 
             x = i
             y = difference_vector[1] / difference_vector[0] * x
 
-            # print("hit grid line at = ", start_corner[0] + x, start_corner[1] + y)
             if is_value_almost_integer(y):  # that would mean we hit a grid corner, that does not produce a hit
                 continue
 
             y_tile = floor(y)
-            # if difference_vector[1] < 0:
-            #     y_tile += -1
 
-            # print("left tile", start_corner[0] + x - 1, start_corner[1] + y_tile)
             tile = self._tiles[start_corner[0] + x - 1][start_corner[1] + y_tile]  # left tile
             if tile not in tiles_along_line:
                 tiles_along_line.append(tile)
 
-            # print("right tile", start_corner[0] + x, start_corner[1] + y_tile)
             tile = self._tiles[start_corner[0] + x][start_corner[1] + y_tile]  # right tile
             if tile not in tiles_along_line:
                 tiles_along_line.append(tile)
@@ -347,8 +327,6 @@ class Grid:
                 continue
 
             x_tile = floor(x)
-            # if difference_vector[0] < 0:
-            #     x_tile += -1
 
             tile = self._tiles[start_corner[0] + x_tile][start_corner[1] + y - 1]  # top tile
             if tile not in tiles_along_line:
