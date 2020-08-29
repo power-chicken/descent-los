@@ -2,6 +2,10 @@ import pygame
 from pygame.locals import *
 from grid import *
 from global_constants import *
+from checkbox import Checkbox
+
+
+default_font = None
 
 
 class App:
@@ -13,11 +17,11 @@ class App:
         self.clock = pygame.time.Clock()
         self._fps = 15
 
-        self._system_font = None
-
         self._text_hero_surface = None
         self._text_monster_surface = None
         self._text_obstacle_surface = None
+
+        self.test_checkbox = None
 
     def on_init(self):
         pygame.init()
@@ -27,16 +31,21 @@ class App:
         self._display_surf.fill(rgb_white)
         self.Grid.draw_all_tiles()
 
+        global default_font
+        default_font = pygame.font.SysFont("comicsansms", size=16)
+
+        self.test_checkbox = Checkbox(500, 300, "hi", default_font)
+        self.test_checkbox.update()
+
         pygame.display.set_caption("Descent Line of Sight Checker!")
 
-        self._system_font = pygame.font.SysFont("comicsansms", size=16)
-        self._text_hero_surface = self._system_font.render("Hero position (left mouse button)", True, rgb_blue)
+        self._text_hero_surface = default_font.render("Hero position (left mouse button)", True, rgb_blue)
         self._display_surf.blit(self._text_hero_surface, (self.width - 300, 100))
 
-        self._text_monster_surface = self._system_font.render("Monster position (middle mouse button)", True, rgb_red)
+        self._text_monster_surface = default_font.render("Monster position (middle mouse button)", True, rgb_red)
         self._display_surf.blit(self._text_monster_surface, (self.width - 300, 150))
 
-        self._text_obstacle_surface = self._system_font.render("Obstacle position (right mouse button)", True,
+        self._text_obstacle_surface = default_font.render("Obstacle position (right mouse button)", True,
                                                                rgb_black)
         self._display_surf.blit(self._text_obstacle_surface, (self.width - 300, 200))
 
@@ -52,7 +61,14 @@ class App:
                 self.on_right_button_down(event)
 
     def on_left_button_down(self, event):
-        tile = self.Grid.get_tile_from_pixel(pygame.mouse.get_pos())
+
+        mouse_pos = pygame.mouse.get_pos()
+
+        if self.test_checkbox.on_checkbox(mouse_pos):
+            self.test_checkbox.change_state()
+            self.test_checkbox.update()
+
+        tile = self.Grid.get_tile_from_pixel(mouse_pos)
         self.Grid.set_tile_type(tile, 'hero')
         self.Grid.draw_all_tiles()
 
