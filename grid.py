@@ -13,6 +13,7 @@ class Tile:
         self.y = y
 
         self.n_lines_see_this_tile = 0
+        self.n_max_lines_from_single_corner = 0
         self.type = 'empty'
 
         self.pygame_display_surf = pygame_display_surf
@@ -63,11 +64,17 @@ class Tile:
         #                  (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
         #                   self.height - 30), 0)
 
+        system_font = pygame.font.SysFont("comicsansms", size=16)
+
         if config.draw_text_n_lines_hit_this_tile:
-            system_font = pygame.font.SysFont("comicsansms", size=16)
             text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
             self.pygame_display_surf.blit(text_hero_surface,
-                                          (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 7))
+                                          (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 3))
+
+        if config.draw_text_n_max_lines_hit_this_tile_from_single_corner:
+            text_hero_surface = system_font.render("{}".format(self.n_max_lines_from_single_corner), True, rgb_white)
+            self.pygame_display_surf.blit(text_hero_surface,
+                                          (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 20))
 
     def get_top_left_corner(self):
 
@@ -124,6 +131,7 @@ class Grid:
 
         for tile in self.get_all_tiles_as_1d_list():
             tile.n_lines_see_this_tile = 0
+            tile.n_max_lines_from_single_corner = 0
 
     def _get_hero_location_is_valid(self):
 
@@ -357,6 +365,9 @@ class Grid:
 
             if config.use_rule_corner_to_corner:
                 for hero_tile_corner in self._hero_tile.get_all_corners():
+
+                    lines_from_single_corner = 0
+
                     for target_tile_corner in target_tile.get_all_corners():
 
                         tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
@@ -371,3 +382,7 @@ class Grid:
                                    or tile.type == 'hero'
                                    for tile in tiles_in_line_from_hero):
                             target_tile.n_lines_see_this_tile += 1
+                            lines_from_single_corner += 1
+
+                    target_tile.n_max_lines_from_single_corner = max(target_tile.n_max_lines_from_single_corner,
+                                                                     lines_from_single_corner)

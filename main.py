@@ -21,9 +21,10 @@ class App:
         self._text_monster_surface = None
         self._text_obstacle_surface = None
 
-        self.checkbox_use_corner_to_corner_rule = None
-        self.checkbox_use_center_to_center_rule = None
-        self.checkbox_draw_text_n_lines_hit_this_tile = None
+        self.checkbox_use_corner_rule = None
+        self.checkbox_use_center_rule = None
+        self.checkbox_draw_total_lines_hit = None
+        self.checkbox_draw_max_lines_from_single_corner = None
 
     def on_init(self):
         pygame.init()
@@ -37,17 +38,23 @@ class App:
         default_font = pygame.font.SysFont("comicsansms", size=16)
 
         # config buttons
-        self.checkbox_use_corner_to_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
-                                                           checked=config.use_rule_corner_to_corner)
-        self.checkbox_use_corner_to_corner_rule.update()
+        self.checkbox_use_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
+                                                 checked=config.use_rule_corner_to_corner)
+        self.checkbox_use_corner_rule.update()
 
-        self.checkbox_use_center_to_center_rule = Checkbox(500, 350, "Use center to center rule", default_font,
-                                                           checked=config.use_rule_corner_to_corner)
-        self.checkbox_use_center_to_center_rule.update()
+        self.checkbox_use_center_rule = Checkbox(500, 350, "Use center to center rule", default_font,
+                                                 checked=config.use_rule_center_to_center)
+        self.checkbox_use_center_rule.update()
 
-        self.checkbox_draw_text_n_lines_hit_this_tile = Checkbox(500, 400, "Show number lines of sight hit",
-                                                                 default_font, checked=config.use_rule_corner_to_corner)
-        self.checkbox_draw_text_n_lines_hit_this_tile.update()
+        self.checkbox_draw_total_lines_hit = Checkbox(500, 400, "Show number lines of sight hit",
+                                                      default_font, checked=config.draw_text_n_lines_hit_this_tile)
+        self.checkbox_draw_total_lines_hit.update()
+
+        self.checkbox_draw_max_lines_from_single_corner = Checkbox(400, 450,
+                                                                   "Show number lines of sight from single corner",
+                                                                   default_font,
+                                                                   checked=config.draw_text_n_max_lines_hit_this_tile_from_single_corner)
+        self.checkbox_draw_max_lines_from_single_corner.update()
 
         # title
         pygame.display.set_caption("Descent Line of Sight Checker!")
@@ -77,25 +84,32 @@ class App:
 
         mouse_pos = pygame.mouse.get_pos()
 
-        if self.checkbox_use_corner_to_corner_rule.on_checkbox(mouse_pos):
-            self.checkbox_use_corner_to_corner_rule.change_state()
-            self.checkbox_use_corner_to_corner_rule.update()
+        if self.checkbox_use_corner_rule.on_checkbox(mouse_pos):
+            self.checkbox_use_corner_rule.change_state()
+            self.checkbox_use_corner_rule.update()
 
-            config.use_rule_corner_to_corner = self.checkbox_use_corner_to_corner_rule.is_checked()
+            config.use_rule_corner_to_corner = self.checkbox_use_corner_rule.is_checked()
             self.Grid.recompute_los()
 
-        if self.checkbox_use_center_to_center_rule.on_checkbox(mouse_pos):
-            self.checkbox_use_center_to_center_rule.change_state()
-            self.checkbox_use_center_to_center_rule.update()
+        if self.checkbox_use_center_rule.on_checkbox(mouse_pos):
+            self.checkbox_use_center_rule.change_state()
+            self.checkbox_use_center_rule.update()
 
-            config.use_rule_center_to_center = self.checkbox_use_center_to_center_rule.is_checked()
+            config.use_rule_center_to_center = self.checkbox_use_center_rule.is_checked()
             self.Grid.recompute_los()
 
-        if self.checkbox_draw_text_n_lines_hit_this_tile.on_checkbox(mouse_pos):
-            self.checkbox_draw_text_n_lines_hit_this_tile.change_state()
-            self.checkbox_draw_text_n_lines_hit_this_tile.update()
+        if self.checkbox_draw_total_lines_hit.on_checkbox(mouse_pos):
+            self.checkbox_draw_total_lines_hit.change_state()
+            self.checkbox_draw_total_lines_hit.update()
 
-            config.draw_text_n_lines_hit_this_tile = self.checkbox_draw_text_n_lines_hit_this_tile.is_checked()
+            config.draw_text_n_lines_hit_this_tile = self.checkbox_draw_total_lines_hit.is_checked()
+            self.Grid.draw_all_tiles()
+
+        if self.checkbox_draw_max_lines_from_single_corner.on_checkbox(mouse_pos):
+            self.checkbox_draw_max_lines_from_single_corner.change_state()
+            self.checkbox_draw_max_lines_from_single_corner.update()
+
+            config.draw_text_n_max_lines_hit_this_tile_from_single_corner = self.checkbox_draw_max_lines_from_single_corner.is_checked()
             self.Grid.draw_all_tiles()
 
         tile = self.Grid.get_tile_from_pixel(mouse_pos)
