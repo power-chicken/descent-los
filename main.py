@@ -54,7 +54,7 @@ class App:
         self.checkbox_draw_los_square = Checkbox(400, 500,
                                                  "Draw los square",
                                                  default_font,
-                                                 checked=config.draw_text_lines_hit_from_single_corner)
+                                                 checked=config.draw_los_square)
         self.checkbox_draw_defense_bonus = Checkbox(400, 550,
                                                     "Draw defense bonus",
                                                     default_font,
