@@ -14,6 +14,8 @@ class Tile:
 
         self.n_lines_see_this_tile = 0
         self.n_max_lines_from_single_corner = 0
+        self.in_melee_range = False
+
         self.type = 'empty'
 
         self.pygame_display_surf = pygame_display_surf
@@ -46,7 +48,7 @@ class Tile:
 
     def get_inner_color(self):
 
-        if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1:
+        if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1 and not self.in_melee_range:
             return rgb_black
         elif self.n_lines_see_this_tile > 0:
             return rgb_green
@@ -136,6 +138,7 @@ class Grid:
         for tile in self.get_all_tiles_as_1d_list():
             tile.n_lines_see_this_tile = 0
             tile.n_max_lines_from_single_corner = 0
+            tile.in_melee_range = False
 
     def _get_hero_location_is_valid(self):
 
@@ -379,8 +382,10 @@ class Grid:
                         tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
                                                                                       target_tile_corner)
 
-                        if tiles_in_line_from_hero is None:
-                            continue
+                        # special case for melee
+                        if np.array_equal(target_tile_corner, hero_tile_corner):
+                            target_tile.in_melee_range = True
+
                         if target_tile in tiles_in_line_from_hero:
                             continue
                         if not any(tile.type == 'obstacle'
