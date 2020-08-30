@@ -16,6 +16,8 @@ class Checkbox:
 
         self.textRect = self.text_disp.get_rect(x=x + 25, centery=y + 9)
 
+        self.update()
+
     def update(self):
         pygame.draw.rect(self.screen, (150, 150, 150), self.checkboxRect)
 
@@ -36,6 +38,10 @@ class Checkbox:
             self.uncheck()
         else:
             self.check()
+
+        self.update()
+
+        return self.is_checked()
 
     def is_checked(self):
         return self.checked

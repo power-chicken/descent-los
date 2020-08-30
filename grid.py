@@ -45,8 +45,11 @@ class Tile:
             return rgb_white
 
     def get_inner_color(self):
-        if self.n_lines_see_this_tile > 0:
-            return rgb_yellow
+
+        if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1:
+            return rgb_black
+        elif self.n_lines_see_this_tile > 0:
+            return rgb_green
         else:
             return rgb_red
 
@@ -60,9 +63,10 @@ class Tile:
                          (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4,
                           self.height - 4), 0)
 
-        # pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-        #                  (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
-        #                   self.height - 30), 0)
+        if config.draw_los_square:
+            pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
+                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
+                              self.height - 30), 0)
 
         system_font = pygame.font.SysFont("comicsansms", size=16)
 
@@ -71,7 +75,7 @@ class Tile:
             self.pygame_display_surf.blit(text_hero_surface,
                                           (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 3))
 
-        if config.draw_text_n_max_lines_hit_this_tile_from_single_corner:
+        if config.draw_text_lines_hit_from_single_corner:
             text_hero_surface = system_font.render("{}".format(self.n_max_lines_from_single_corner), True, rgb_white)
             self.pygame_display_surf.blit(text_hero_surface,
                                           (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 20))
