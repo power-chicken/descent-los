@@ -2,7 +2,7 @@ import pygame
 import numpy as np
 from global_constants import *
 from aux_functions import *
-from config import *
+import config
 
 
 class Tile:
@@ -63,7 +63,7 @@ class Tile:
         #                  (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
         #                   self.height - 30), 0)
 
-        if draw_text_n_lines_hit_this_tile:
+        if config.draw_text_n_lines_hit_this_tile:
             system_font = pygame.font.SysFont("comicsansms", size=16)
             text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
             self.pygame_display_surf.blit(text_hero_surface,
@@ -347,7 +347,7 @@ class Grid:
             if target_tile is self._hero_tile:
                 continue
 
-            if use_rule_center_to_center:
+            if config.use_rule_center_to_center:
                 tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
                     self._hero_tile.get_center(),
                     target_tile.get_center())
@@ -355,7 +355,7 @@ class Grid:
                 if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
                     target_tile.n_lines_see_this_tile += 1
 
-            if use_rule_corner_to_corner:
+            if config.use_rule_corner_to_corner:
                 for hero_tile_corner in self._hero_tile.get_all_corners():
                     for target_tile_corner in target_tile.get_all_corners():
 

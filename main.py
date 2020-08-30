@@ -3,7 +3,7 @@ from pygame.locals import *
 from grid import *
 from global_constants import *
 from checkbox import Checkbox
-
+import config
 
 default_font = None
 
@@ -21,7 +21,7 @@ class App:
         self._text_monster_surface = None
         self._text_obstacle_surface = None
 
-        self.test_checkbox = None
+        self.checkbox_use_corner_to_corner_rule = None
 
     def on_init(self):
         pygame.init()
@@ -34,8 +34,9 @@ class App:
         global default_font
         default_font = pygame.font.SysFont("comicsansms", size=16)
 
-        self.test_checkbox = Checkbox(500, 300, "hi", default_font)
-        self.test_checkbox.update()
+        self.checkbox_use_corner_to_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
+                                                           checked=config.use_rule_corner_to_corner)
+        self.checkbox_use_corner_to_corner_rule.update()
 
         pygame.display.set_caption("Descent Line of Sight Checker!")
 
@@ -45,8 +46,7 @@ class App:
         self._text_monster_surface = default_font.render("Monster position (middle mouse button)", True, rgb_red)
         self._display_surf.blit(self._text_monster_surface, (self.width - 300, 150))
 
-        self._text_obstacle_surface = default_font.render("Obstacle position (right mouse button)", True,
-                                                               rgb_black)
+        self._text_obstacle_surface = default_font.render("Obstacle position (right mouse button)", True, rgb_black)
         self._display_surf.blit(self._text_obstacle_surface, (self.width - 300, 200))
 
     def on_event(self, event):
@@ -64,9 +64,12 @@ class App:
 
         mouse_pos = pygame.mouse.get_pos()
 
-        if self.test_checkbox.on_checkbox(mouse_pos):
-            self.test_checkbox.change_state()
-            self.test_checkbox.update()
+        if self.checkbox_use_corner_to_corner_rule.on_checkbox(mouse_pos):
+            self.checkbox_use_corner_to_corner_rule.change_state()
+            self.checkbox_use_corner_to_corner_rule.update()
+
+            config.use_rule_corner_to_corner = self.checkbox_use_corner_to_corner_rule.is_checked()
+            self.Grid.recompute_los()
 
         tile = self.Grid.get_tile_from_pixel(mouse_pos)
         self.Grid.set_tile_type(tile, 'hero')
