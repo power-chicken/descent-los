@@ -16,6 +16,7 @@ class Checkbox:
 
         self.textRect = self.text_disp.get_rect(x=x + 25, centery=y + 9)
 
+        self.screen.blit(self.text_disp, self.textRect)
         self.update()
 
     def update(self):
@@ -23,8 +24,6 @@ class Checkbox:
 
         if self.checked:
             pygame.draw.rect(self.screen, (75, 75, 75), self.crossRect)
-
-        self.screen.blit(self.text_disp, self.textRect)
 
     def on_checkbox(self, position):
         if self.get_x() <= position[0] <= (self.get_x() + 25 + self.textRect.w) and \
