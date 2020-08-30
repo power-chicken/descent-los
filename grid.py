@@ -360,6 +360,8 @@ class Grid:
                     self._hero_tile.get_center(),
                     target_tile.get_center())
 
+                tiles_in_line_from_hero.remove(target_tile)
+
                 if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
                     target_tile.n_lines_see_this_tile += 1
 
