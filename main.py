@@ -22,6 +22,8 @@ class App:
         self._text_obstacle_surface = None
 
         self.checkbox_use_corner_to_corner_rule = None
+        self.checkbox_use_center_to_center_rule = None
+        self.checkbox_draw_text_n_lines_hit_this_tile = None
 
     def on_init(self):
         pygame.init()
@@ -34,12 +36,23 @@ class App:
         global default_font
         default_font = pygame.font.SysFont("comicsansms", size=16)
 
+        # config buttons
         self.checkbox_use_corner_to_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
                                                            checked=config.use_rule_corner_to_corner)
         self.checkbox_use_corner_to_corner_rule.update()
 
+        self.checkbox_use_center_to_center_rule = Checkbox(500, 350, "Use center to center rule", default_font,
+                                                           checked=config.use_rule_corner_to_corner)
+        self.checkbox_use_center_to_center_rule.update()
+
+        self.checkbox_draw_text_n_lines_hit_this_tile = Checkbox(500, 400, "Show number lines of sight hit",
+                                                                 default_font, checked=config.use_rule_corner_to_corner)
+        self.checkbox_draw_text_n_lines_hit_this_tile.update()
+
+        # title
         pygame.display.set_caption("Descent Line of Sight Checker!")
 
+        # legend
         self._text_hero_surface = default_font.render("Hero position (left mouse button)", True, rgb_blue)
         self._display_surf.blit(self._text_hero_surface, (self.width - 300, 100))
 
@@ -70,6 +83,20 @@ class App:
 
             config.use_rule_corner_to_corner = self.checkbox_use_corner_to_corner_rule.is_checked()
             self.Grid.recompute_los()
+
+        if self.checkbox_use_center_to_center_rule.on_checkbox(mouse_pos):
+            self.checkbox_use_center_to_center_rule.change_state()
+            self.checkbox_use_center_to_center_rule.update()
+
+            config.use_rule_center_to_center = self.checkbox_use_center_to_center_rule.is_checked()
+            self.Grid.recompute_los()
+
+        if self.checkbox_draw_text_n_lines_hit_this_tile.on_checkbox(mouse_pos):
+            self.checkbox_draw_text_n_lines_hit_this_tile.change_state()
+            self.checkbox_draw_text_n_lines_hit_this_tile.update()
+
+            config.draw_text_n_lines_hit_this_tile = self.checkbox_draw_text_n_lines_hit_this_tile.is_checked()
+            self.Grid.draw_all_tiles()
 
         tile = self.Grid.get_tile_from_pixel(mouse_pos)
         self.Grid.set_tile_type(tile, 'hero')
