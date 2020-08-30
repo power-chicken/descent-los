@@ -20,18 +20,13 @@ class Tile:
 
         self.pygame_display_surf = pygame_display_surf
 
-        self.width = 40
-        self.height = 40
-
-        self.grid_line_width = 3
-
     def get_left_pixel_value(self):
 
-        return self.x * self.width
+        return self.x * pixels_per_tile
 
     def get_top_pixel_value(self):
 
-        return self.y * self.height
+        return self.y * pixels_per_tile
 
     def get_outer_color(self):
 
@@ -58,19 +53,19 @@ class Tile:
     def draw(self):
 
         pygame.draw.rect(self.pygame_display_surf, rgb_black,
-                         (self.get_left_pixel_value(), self.get_top_pixel_value(), self.width, self.height),
-                         self.grid_line_width)
+                         (self.get_left_pixel_value(), self.get_top_pixel_value(), pixels_per_tile, pixels_per_tile),
+                         grid_line_width)
 
         pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
-                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, self.width - 4,
-                          self.height - 4), 0)
+                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, pixels_per_tile - 4,
+                          pixels_per_tile - 4), 0)
 
         if config.draw_los_square:
             pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, self.width - 30,
-                              self.height - 30), 0)
+                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, pixels_per_tile - 30,
+                              pixels_per_tile - 30), 0)
 
-        system_font = pygame.font.SysFont("comicsansms", size=16)
+        system_font = pygame.font.SysFont(default_font_type, size=default_font_size)
 
         if config.draw_text_n_lines_hit_this_tile:
             text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
@@ -105,7 +100,8 @@ class Tile:
 
     def get_center(self):
 
-        return np.array([self.get_left_pixel_value() + self.width / 2, self.get_top_pixel_value() + self.height / 2])
+        return np.array([self.get_left_pixel_value() + pixels_per_tile / 2,
+                         self.get_top_pixel_value() + pixels_per_tile / 2])
 
 
 class Grid:
@@ -115,8 +111,6 @@ class Grid:
         self._n_tiles_x, self._n_tiles_y = 8, 8
 
         # draw parameter
-        self._square_size = 40
-        self._grid_line_width = 3
         self._distance_from_window = 0
 
         self._tiles = [[Tile(x, y, pygame_display_surf) for y in range(self._n_tiles_y)]
@@ -151,8 +145,8 @@ class Grid:
 
     def get_tile_coordinates_from_pixel(self, cursor_pos):
 
-        x_coord = (cursor_pos[0] - self._distance_from_window) / self._square_size
-        y_coord = (cursor_pos[1] - self._distance_from_window) / self._square_size
+        x_coord = (cursor_pos[0] - self._distance_from_window) / pixels_per_tile
+        y_coord = (cursor_pos[1] - self._distance_from_window) / pixels_per_tile
 
         return x_coord, y_coord
 
@@ -207,7 +201,7 @@ class Grid:
 
         location_diff = end_location - start_location
 
-        n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / self._square_size)
+        n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / pixels_per_tile)
 
         for i in range(n_samples_on_line):
 

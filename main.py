@@ -15,7 +15,7 @@ class App:
         self.size = self.width, self.height = 800, 600
         self.Grid = None
         self.clock = pygame.time.Clock()
-        self._fps = 15
+        self._fps = 30
 
         self._text_hero_surface = None
         self._text_monster_surface = None
@@ -38,7 +38,7 @@ class App:
         self.Grid.draw_all_tiles()
 
         global default_font
-        default_font = pygame.font.SysFont("comicsansms", size=16)
+        default_font = pygame.font.SysFont(default_font_type, size=default_font_size)
 
         # config buttons
         self.checkbox_use_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
@@ -61,7 +61,7 @@ class App:
                                                     checked=config.draw_defense_bonus)
 
         # title
-        pygame.display.set_caption("Descent Line of Sight Checker!")
+        pygame.display.set_caption("{} {}".format(app_title, version_string))
 
         # legend
         self._text_hero_surface = default_font.render("Hero position (left mouse button)", True, rgb_blue)

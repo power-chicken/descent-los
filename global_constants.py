@@ -1,3 +1,18 @@
+
+# project meta
+app_title = "Descent Line of Sight Checker"
+version_string = "v0.1"
+author = "Sebastian Hennemann"
+
+# font
+default_font_type = "comicsansms"
+default_font_size = 16
+
+# layout
+pixels_per_tile = 40
+grid_line_width = 3
+
+# colors
 rgb_red = (255, 0, 0)
 rgb_blue = (0, 0, 255)
 rgb_green = (0, 255, 0)
