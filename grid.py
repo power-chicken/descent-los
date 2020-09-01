@@ -24,20 +24,25 @@ class Tile(Button):
         self.n_max_lines_from_single_corner = 0
         self.in_melee_range = False
 
-        self.type = 'empty'
+        self._type = 'empty'
 
         self.bind(on_press=self.press_button)
+
+    @property
+    def type(self):
+        return self._type
+
+    @type.setter
+    def type(self, new_type):
+        self._type = new_type
+        self.background_color = self.get_background_color()
 
     def press_button(self, instance):
 
         self.tile_grid.set_tile_type(self, "obstacle")
         print("x= {}, y= {}".format(self.grid_pos_x, self.grid_pos_y))
 
-    def change_type(self, new_type):
 
-        self.type = new_type
-        print("new state is", self.type)
-        self.background_color = self.get_background_color()
 
     # def get_left_pixel_value(self):
     #
@@ -200,7 +205,7 @@ class TileGrid(GridLayout):
 
         # if requesting the same type on the as it is, change it to empty. Otherwise change as requested
         if tile.type == new_tile_type:
-            tile.change_type('empty')
+            tile.type = 'empty'
 
             # if removed the hero, erase the reference
             if new_tile_type == 'hero':
@@ -210,12 +215,12 @@ class TileGrid(GridLayout):
             if tile is self._hero_tile:
                 self._hero_tile = None
 
-            tile.change_type(new_tile_type)
+            tile.type = new_tile_type
 
             # if a new hero location is set, make the old empty and set new reference
             if new_tile_type == 'hero':
                 if self._get_hero_location_is_valid():
-                    self._hero_tile.change_type('empty')
+                    self._hero_tile.type = 'empty'
                 self._hero_tile = tile
 
         self.recompute_los()
