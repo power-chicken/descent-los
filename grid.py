@@ -4,13 +4,21 @@ from global_constants import *
 from aux_functions import *
 import config
 
+from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
 
-class Tile:
 
-    def __init__(self, x, y, pygame_display_surf):
+class Tile(Button):
 
-        self.x = x
-        self.y = y
+    def __init__(self, grid_pos_x, grid_pos_y, tile_grid, **kwargs):
+        super(Tile, self).__init__(**kwargs)
+
+        self.tile_grid = tile_grid
+
+        self.grid_pos_x = grid_pos_x
+        self.grid_pos_y = grid_pos_y
 
         self.n_lines_see_this_tile = 0
         self.n_max_lines_from_single_corner = 0
@@ -18,17 +26,28 @@ class Tile:
 
         self.type = 'empty'
 
-        self.pygame_display_surf = pygame_display_surf
+        self.bind(on_press=self.press_button)
 
-    def get_left_pixel_value(self):
+    def press_button(self, instance):
 
-        return self.x * pixels_per_tile
+        self.tile_grid.set_tile_type(self, "obstacle")
+        print("x= {}, y= {}".format(self.grid_pos_x, self.grid_pos_y))
 
-    def get_top_pixel_value(self):
+    def change_type(self, new_type):
 
-        return self.y * pixels_per_tile
+        self.type = new_type
+        print("new state is", self.type)
+        self.background_color = self.get_background_color()
 
-    def get_outer_color(self):
+    # def get_left_pixel_value(self):
+    #
+    #     return self.x * pixels_per_tile
+    #
+    # def get_top_pixel_value(self):
+    #
+    #     return self.y * pixels_per_tile
+    #
+    def get_background_color(self):
 
         if self.type == 'empty':
             return rgb_gray
@@ -40,42 +59,42 @@ class Tile:
             return rgb_black
         else:
             return rgb_white
+    #
+    # def get_inner_color(self):
+    #
+    #     if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1 and not self.in_melee_range:
+    #         return rgb_black
+    #     elif self.n_lines_see_this_tile > 0:
+    #         return rgb_green
+    #     else:
+    #         return rgb_red
 
-    def get_inner_color(self):
-
-        if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1 and not self.in_melee_range:
-            return rgb_black
-        elif self.n_lines_see_this_tile > 0:
-            return rgb_green
-        else:
-            return rgb_red
-
-    def draw(self):
-
-        pygame.draw.rect(self.pygame_display_surf, rgb_black,
-                         (self.get_left_pixel_value(), self.get_top_pixel_value(), pixels_per_tile, pixels_per_tile),
-                         grid_line_width)
-
-        pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
-                         (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, pixels_per_tile - 4,
-                          pixels_per_tile - 4), 0)
-
-        if config.draw_los_square:
-            pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-                             (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, pixels_per_tile - 30,
-                              pixels_per_tile - 30), 0)
-
-        system_font = pygame.font.SysFont(default_font_type, size=default_font_size)
-
-        if config.draw_text_n_lines_hit_this_tile:
-            text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
-            self.pygame_display_surf.blit(text_hero_surface,
-                                          (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 3))
-
-        if config.draw_text_lines_hit_from_single_corner:
-            text_hero_surface = system_font.render("{}".format(self.n_max_lines_from_single_corner), True, rgb_white)
-            self.pygame_display_surf.blit(text_hero_surface,
-                                          (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 20))
+    # def draw(self):
+    #
+        # pygame.draw.rect(self.pygame_display_surf, rgb_black,
+        #                  (self.get_left_pixel_value(), self.get_top_pixel_value(), pixels_per_tile, pixels_per_tile),
+        #                  grid_line_width)
+        #
+        # pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
+        #                  (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, pixels_per_tile - 4,
+        #                   pixels_per_tile - 4), 0)
+        #
+        # if config.draw_los_square:
+        #     pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
+        #                      (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, pixels_per_tile - 30,
+        #                       pixels_per_tile - 30), 0)
+        #
+        # system_font = pygame.font.SysFont(default_font_type, size=default_font_size)
+        #
+        # if config.draw_text_n_lines_hit_this_tile:
+        #     text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
+        #     self.pygame_display_surf.blit(text_hero_surface,
+        #                                   (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 3))
+        #
+        # if config.draw_text_lines_hit_from_single_corner:
+        #     text_hero_surface = system_font.render("{}".format(self.n_max_lines_from_single_corner), True, rgb_white)
+        #     self.pygame_display_surf.blit(text_hero_surface,
+        #                                   (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 20))
 
     def get_top_left_corner(self):
 
@@ -100,23 +119,29 @@ class Tile:
 
     def get_center(self):
 
-        return np.array([self.get_left_pixel_value() + pixels_per_tile / 2,
-                         self.get_top_pixel_value() + pixels_per_tile / 2])
+        return 0.25 * np.sum(self.get_all_corners())
 
 
-class Grid:
+class TileGrid(GridLayout):
 
-    def __init__(self, pygame_display_surf):
+    def __init__(self, **kwargs):
+        super(TileGrid, self).__init__(**kwargs)
 
         self._n_tiles_x, self._n_tiles_y = 8, 8
 
         # draw parameter
         self._distance_from_window = 0
 
-        self._tiles = [[Tile(x, y, pygame_display_surf) for y in range(self._n_tiles_y)]
+        self._tiles = [[Tile(x, y, self) for y in range(self._n_tiles_y)]
                        for x in range(self._n_tiles_x)]
 
         self._hero_tile = None
+
+        # kivy grid layout
+        self.cols = self._n_tiles_y
+
+        for tile in self.get_all_tiles_as_1d_list():
+            self.add_widget(tile)
 
     def get_all_tiles_as_1d_list(self):
 
@@ -143,12 +168,12 @@ class Grid:
         for tile in self.get_all_tiles_as_1d_list():
             tile.draw()
 
-    def get_tile_coordinates_from_pixel(self, cursor_pos):
-
-        x_coord = (cursor_pos[0] - self._distance_from_window) / pixels_per_tile
-        y_coord = (cursor_pos[1] - self._distance_from_window) / pixels_per_tile
-
-        return x_coord, y_coord
+    # def get_tile_coordinates_from_pixel(self, cursor_pos):
+    #
+    #     x_coord = (cursor_pos[0] - self._distance_from_window) / pixels_per_tile
+    #     y_coord = (cursor_pos[1] - self._distance_from_window) / pixels_per_tile
+    #
+    #     return x_coord, y_coord
 
     def get_tile_from_tile_coordinates(self, x_coord, y_coord):
 
@@ -157,11 +182,11 @@ class Grid:
         else:
             return None
 
-    def get_tile_from_pixel(self, cursor_pos):
-
-        x_coord, y_coord = self.get_tile_coordinates_from_pixel(cursor_pos)
-
-        return self.get_tile_from_tile_coordinates(x_coord, y_coord)
+    # def get_tile_from_pixel(self, cursor_pos):
+    #
+    #     x_coord, y_coord = self.get_tile_coordinates_from_pixel(cursor_pos)
+    #
+    #     return self.get_tile_from_tile_coordinates(x_coord, y_coord)
 
     def is_tile_location_valid(self, x, y):
 
@@ -175,7 +200,7 @@ class Grid:
 
         # if requesting the same type on the as it is, change it to empty. Otherwise change as requested
         if tile.type == new_tile_type:
-            tile.type = 'empty'
+            tile.change_type('empty')
 
             # if removed the hero, erase the reference
             if new_tile_type == 'hero':
@@ -185,34 +210,34 @@ class Grid:
             if tile is self._hero_tile:
                 self._hero_tile = None
 
-            tile.type = new_tile_type
+            tile.change_type(new_tile_type)
 
             # if a new hero location is set, make the old empty and set new reference
             if new_tile_type == 'hero':
                 if self._get_hero_location_is_valid():
-                    self._hero_tile.type = 'empty'
+                    self._hero_tile.change_type('empty')
                 self._hero_tile = tile
 
         self.recompute_los()
 
-    def get_all_tiles_in_line_by_sampling_pixels(self, start_location, end_location):
-
-        intersecting_tiles = []
-
-        location_diff = end_location - start_location
-
-        n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / pixels_per_tile)
-
-        for i in range(n_samples_on_line):
-
-            location_sample = start_location + i / (n_samples_on_line - 1) * location_diff
-
-            tile = self.get_tile_from_pixel(location_sample)
-
-            if tile not in intersecting_tiles and tile is not None:
-                intersecting_tiles.append(tile)
-
-        return intersecting_tiles
+    # def get_all_tiles_in_line_by_sampling_pixels(self, start_location, end_location):
+    #
+    #     intersecting_tiles = []
+    #
+    #     location_diff = end_location - start_location
+    #
+    #     n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / pixels_per_tile)
+    #
+    #     for i in range(n_samples_on_line):
+    #
+    #         location_sample = start_location + i / (n_samples_on_line - 1) * location_diff
+    #
+    #         tile = self.get_tile_from_pixel(location_sample)
+    #
+    #         if tile not in intersecting_tiles and tile is not None:
+    #             intersecting_tiles.append(tile)
+    #
+    #     return intersecting_tiles
 
     def get_all_tiles_in_line_discrete(self, start_corner, end_corner):
 
@@ -356,15 +381,15 @@ class Grid:
             if target_tile is self._hero_tile:
                 continue
 
-            if config.use_rule_center_to_center:
-                tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
-                    self._hero_tile.get_center(),
-                    target_tile.get_center())
-
-                tiles_in_line_from_hero.remove(target_tile)
-
-                if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
-                    target_tile.n_lines_see_this_tile += 1
+            # if config.use_rule_center_to_center:
+            #     tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
+            #         self._hero_tile.get_center(),
+            #         target_tile.get_center())
+            #
+            #     tiles_in_line_from_hero.remove(target_tile)
+            #
+            #     if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
+            #         target_tile.n_lines_see_this_tile += 1
 
             if config.use_rule_corner_to_corner:
                 for hero_tile_corner in self._hero_tile.get_all_corners():

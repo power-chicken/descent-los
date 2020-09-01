@@ -1,21 +1,44 @@
-import pygame
-from pygame.locals import *
-from grid import *
+from grid import TileGrid
 from global_constants import *
 from checkbox import Checkbox
 import config
+import kivy
+from kivy.app import App as KivyApp
+from kivy.uix.label import Label
+from kivy.uix.gridlayout import GridLayout
+from kivy.uix.textinput import TextInput
+from kivy.uix.button import Button
 
 default_font = None
 
 
-class App:
+class MainGrid(GridLayout):
+    def __init__(self, **kwargs):
+        super(MainGrid, self).__init__(**kwargs)
+
+        self.cols = 1
+
+        self.tile_grid = TileGrid()
+
+        self.add_widget(self.tile_grid)
+
+        self.add_widget(Label(text="name"))
+
+        self.test_button = Button(text="arsch", font_size=default_font_size)
+        self.test_button.bind(on_press=self.press_test_button)
+        self.add_widget(self.test_button)
+
+    def press_test_button(self, instance):
+        print("pressed button")
+
+
+class LosCheckerApp(KivyApp):
+
     def __init__(self):
-        self._running = True
-        self._display_surf = None
-        self.size = self.width, self.height = 800, 600
-        self.Grid = None
-        self.clock = pygame.time.Clock()
-        self._fps = 30
+
+        super().__init__()
+
+        self.main_grid = MainGrid()
 
         self._text_hero_surface = None
         self._text_monster_surface = None
@@ -29,16 +52,10 @@ class App:
         self.checkbox_draw_los_square = None
         self.checkbox_draw_defense_bonus = None
 
-    def on_init(self):
-        pygame.init()
-        self._display_surf = pygame.display.set_mode(self.size, pygame.HWSURFACE | pygame.DOUBLEBUF)
-        self.Grid = Grid(self._display_surf)
-        self._running = True
-        self._display_surf.fill(rgb_white)
-        self.Grid.draw_all_tiles()
+    def build(self):
+        return self.main_grid
 
-        global default_font
-        default_font = pygame.font.SysFont(default_font_type, size=default_font_size)
+    def on_init(self):
 
         # config buttons
         self.checkbox_use_corner_rule = Checkbox(500, 300, "Use corner to corner rule", default_font,
@@ -60,33 +77,14 @@ class App:
                                                     default_font,
                                                     checked=config.draw_defense_bonus)
 
-        # title
-        pygame.display.set_caption("{} {}".format(app_title, version_string))
-
         # legend
         self._text_hero_surface = default_font.render("Hero position (left mouse button)", True, rgb_blue)
-        self._display_surf.blit(self._text_hero_surface, (self.width - 300, 100))
 
         self._text_monster_surface = default_font.render("Monster position (middle mouse button)", True, rgb_red)
-        self._display_surf.blit(self._text_monster_surface, (self.width - 300, 150))
 
         self._text_obstacle_surface = default_font.render("Obstacle position (right mouse button)", True, rgb_black)
-        self._display_surf.blit(self._text_obstacle_surface, (self.width - 300, 200))
-
-    def on_event(self, event):
-        if event.type == pygame.QUIT:
-            self._running = False
-        elif event.type == MOUSEBUTTONDOWN:
-            if event.button == 1:
-                self.on_left_button_down(event)
-            elif event.button == 2:
-                self.on_middle_button_down(event)
-            elif event.button == 3:
-                self.on_right_button_down(event)
 
     def on_left_button_down(self, event):
-
-        mouse_pos = pygame.mouse.get_pos()
 
         if self.checkbox_use_corner_rule.on_checkbox(mouse_pos):
             config.use_rule_corner_to_corner = self.checkbox_use_corner_rule.change_state()
@@ -124,27 +122,7 @@ class App:
         self.Grid.set_tile_type(tile, 'obstacle')
         self.Grid.draw_all_tiles()
 
-    def on_loop(self):
-        self.clock.tick(self._fps)
-
-    def on_render(self):
-        pygame.display.flip()
-
-    def on_cleanup(self):
-        pygame.quit()
-
-    def on_execute(self):
-        if self.on_init() == False:
-            self._running = False
-
-        while self._running:
-            for event in pygame.event.get():
-                self.on_event(event)
-            self.on_loop()
-            self.on_render()
-        self.on_cleanup()
-
 
 if __name__ == "__main__":
-    theApp = App()
-    theApp.on_execute()
+
+    LosCheckerApp().run()
