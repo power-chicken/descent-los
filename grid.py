@@ -1,6 +1,4 @@
-import pygame
 import numpy as np
-from global_constants import *
 from aux_functions import *
 import config
 
