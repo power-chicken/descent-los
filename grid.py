@@ -4,14 +4,11 @@ from global_constants import *
 from aux_functions import *
 import config
 
-from kivy.uix.label import Label
 from kivy.uix.gridlayout import GridLayout
-from kivy.uix.textinput import TextInput
 from kivy.uix.button import Button
 
 
 class Tile(Button):
-
     def __init__(self, grid_pos_x, grid_pos_y, tile_grid, **kwargs):
         super(Tile, self).__init__(**kwargs)
 
@@ -24,9 +21,14 @@ class Tile(Button):
         self.n_max_lines_from_single_corner = 0
         self.in_melee_range = False
 
-        self._type = 'empty'
+        self.a_number = 0
 
-        self.bind(on_press=self.press_button)
+        self._type = 'empty'
+        self.text = ""
+
+        self.bind(on_press=self.press_button, on_release=self.release_button)
+
+        self.rect = None
 
     @property
     def type(self):
@@ -35,110 +37,52 @@ class Tile(Button):
     @type.setter
     def type(self, new_type):
         self._type = new_type
-        self.background_color = self.get_background_color()
+        self.background_color = get_color_by_tile_type(self.type)
 
     def press_button(self, instance):
+        self.background_color = rgb_white
 
-        self.tile_grid.set_tile_type(self, "obstacle")
-        print("x= {}, y= {}".format(self.grid_pos_x, self.grid_pos_y))
+    def release_button(self, instance):
+        self.tile_grid.set_tile_type(self, config.tile_type_change_mode)
 
+    def update_text(self):
+        if self.type == "obstacle":
+            self.text = ""
 
-
-    # def get_left_pixel_value(self):
-    #
-    #     return self.x * pixels_per_tile
-    #
-    # def get_top_pixel_value(self):
-    #
-    #     return self.y * pixels_per_tile
-    #
-    def get_background_color(self):
-
-        if self.type == 'empty':
-            return rgb_gray
-        elif self.type == 'hero':
-            return rgb_blue
-        elif self.type == 'monster':
-            return rgb_red
-        elif self.type == 'obstacle':
-            return rgb_black
         else:
-            return rgb_white
-    #
-    # def get_inner_color(self):
-    #
-    #     if config.draw_defense_bonus and self.n_max_lines_from_single_corner == 1 and not self.in_melee_range:
-    #         return rgb_black
-    #     elif self.n_lines_see_this_tile > 0:
-    #         return rgb_green
-    #     else:
-    #         return rgb_red
-
-    # def draw(self):
-    #
-        # pygame.draw.rect(self.pygame_display_surf, rgb_black,
-        #                  (self.get_left_pixel_value(), self.get_top_pixel_value(), pixels_per_tile, pixels_per_tile),
-        #                  grid_line_width)
-        #
-        # pygame.draw.rect(self.pygame_display_surf, self.get_outer_color(),
-        #                  (self.get_left_pixel_value() + 2, self.get_top_pixel_value() + 2, pixels_per_tile - 4,
-        #                   pixels_per_tile - 4), 0)
-        #
-        # if config.draw_los_square:
-        #     pygame.draw.rect(self.pygame_display_surf, self.get_inner_color(),
-        #                      (self.get_left_pixel_value() + 15, self.get_top_pixel_value() + 15, pixels_per_tile - 30,
-        #                       pixels_per_tile - 30), 0)
-        #
-        # system_font = pygame.font.SysFont(default_font_type, size=default_font_size)
-        #
-        # if config.draw_text_n_lines_hit_this_tile:
-        #     text_hero_surface = system_font.render("{}".format(self.n_lines_see_this_tile), True, rgb_white)
-        #     self.pygame_display_surf.blit(text_hero_surface,
-        #                                   (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 3))
-        #
-        # if config.draw_text_lines_hit_from_single_corner:
-        #     text_hero_surface = system_font.render("{}".format(self.n_max_lines_from_single_corner), True, rgb_white)
-        #     self.pygame_display_surf.blit(text_hero_surface,
-        #                                   (self.get_left_pixel_value() + 5, self.get_top_pixel_value() + 20))
+            if self.n_lines_see_this_tile > 0:
+                self.text = "hit"
+            else:
+                self.text = ""
 
     def get_top_left_corner(self):
-
-        return np.array([self.x, self.y])
+        return np.array([self.grid_pos_x, self.grid_pos_y])
 
     def get_top_right_corner(self):
-
-        return np.array([self.x + 1, self.y])
+        return np.array([self.grid_pos_x + 1, self.grid_pos_y])
 
     def get_bottom_left_corner(self):
-
-        return np.array([self.x, self.y + 1])
+        return np.array([self.grid_pos_x, self.grid_pos_y + 1])
 
     def get_bottom_right_corner(self):
-
-        return np.array([self.x + 1, self.y + 1])
+        return np.array([self.grid_pos_x + 1, self.grid_pos_y + 1])
 
     def get_all_corners(self):
-
         return [self.get_top_left_corner(), self.get_top_right_corner(),
                 self.get_bottom_left_corner(), self.get_bottom_right_corner()]
 
     def get_center(self):
-
         return 0.25 * np.sum(self.get_all_corners())
 
 
 class TileGrid(GridLayout):
-
     def __init__(self, **kwargs):
         super(TileGrid, self).__init__(**kwargs)
 
         self._n_tiles_x, self._n_tiles_y = 8, 8
 
-        # draw parameter
-        self._distance_from_window = 0
-
         self._tiles = [[Tile(x, y, self) for y in range(self._n_tiles_y)]
-                       for x in range(self._n_tiles_x)]
+                        for x in range(self._n_tiles_x)]
 
         self._hero_tile = None
 
@@ -168,30 +112,12 @@ class TileGrid(GridLayout):
 
         return self._hero_tile is not None
 
-    def draw_all_tiles(self):
-
-        for tile in self.get_all_tiles_as_1d_list():
-            tile.draw()
-
-    # def get_tile_coordinates_from_pixel(self, cursor_pos):
-    #
-    #     x_coord = (cursor_pos[0] - self._distance_from_window) / pixels_per_tile
-    #     y_coord = (cursor_pos[1] - self._distance_from_window) / pixels_per_tile
-    #
-    #     return x_coord, y_coord
-
     def get_tile_from_tile_coordinates(self, x_coord, y_coord):
 
         if self.is_tile_location_valid(floor(x_coord), floor(y_coord)):
             return self._tiles[floor(x_coord)][floor(y_coord)]
         else:
             return None
-
-    # def get_tile_from_pixel(self, cursor_pos):
-    #
-    #     x_coord, y_coord = self.get_tile_coordinates_from_pixel(cursor_pos)
-    #
-    #     return self.get_tile_from_tile_coordinates(x_coord, y_coord)
 
     def is_tile_location_valid(self, x, y):
 
@@ -224,25 +150,6 @@ class TileGrid(GridLayout):
                 self._hero_tile = tile
 
         self.recompute_los()
-
-    # def get_all_tiles_in_line_by_sampling_pixels(self, start_location, end_location):
-    #
-    #     intersecting_tiles = []
-    #
-    #     location_diff = end_location - start_location
-    #
-    #     n_samples_on_line = floor(10 * (abs(location_diff[0]) + abs(location_diff[1])) / pixels_per_tile)
-    #
-    #     for i in range(n_samples_on_line):
-    #
-    #         location_sample = start_location + i / (n_samples_on_line - 1) * location_diff
-    #
-    #         tile = self.get_tile_from_pixel(location_sample)
-    #
-    #         if tile not in intersecting_tiles and tile is not None:
-    #             intersecting_tiles.append(tile)
-    #
-    #     return intersecting_tiles
 
     def get_all_tiles_in_line_discrete(self, start_corner, end_corner):
 
@@ -376,48 +283,47 @@ class TileGrid(GridLayout):
         return tiles_along_line
 
     def recompute_los(self):
-
         self._init_default_los()
+        if self._get_hero_location_is_valid():
+            for target_tile in self.get_all_tiles_as_1d_list():
+                if target_tile is self._hero_tile:
+                    continue
 
-        if not self._get_hero_location_is_valid():
-            return
+                # if config.use_rule_center_to_center:
+                #     tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
+                #         self._hero_tile.get_center(),
+                #         target_tile.get_center())
+                #
+                #     tiles_in_line_from_hero.remove(target_tile)
+                #
+                #     if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
+                #         target_tile.n_lines_see_this_tile += 1
 
-        for target_tile in self.get_all_tiles_as_1d_list():
-            if target_tile is self._hero_tile:
-                continue
+                if config.use_rule_corner_to_corner:
+                    for hero_tile_corner in self._hero_tile.get_all_corners():
 
-            # if config.use_rule_center_to_center:
-            #     tiles_in_line_from_hero = self.get_all_tiles_in_line_by_sampling_pixels(
-            #         self._hero_tile.get_center(),
-            #         target_tile.get_center())
-            #
-            #     tiles_in_line_from_hero.remove(target_tile)
-            #
-            #     if not any(tile.type == 'obstacle' or tile.type == 'monster' for tile in tiles_in_line_from_hero):
-            #         target_tile.n_lines_see_this_tile += 1
+                        lines_from_single_corner = 0
 
-            if config.use_rule_corner_to_corner:
-                for hero_tile_corner in self._hero_tile.get_all_corners():
+                        for target_tile_corner in target_tile.get_all_corners():
 
-                    lines_from_single_corner = 0
+                            tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
+                                                                                          target_tile_corner)
 
-                    for target_tile_corner in target_tile.get_all_corners():
+                            # special case for melee
+                            if np.array_equal(target_tile_corner, hero_tile_corner):
+                                target_tile.in_melee_range = True
 
-                        tiles_in_line_from_hero = self.get_all_tiles_in_line_discrete(hero_tile_corner,
-                                                                                      target_tile_corner)
+                            if target_tile in tiles_in_line_from_hero:
+                                continue
+                            if not any(tile.type == 'obstacle'
+                                       or tile.type == 'monster'
+                                       or tile.type == 'hero'
+                                       for tile in tiles_in_line_from_hero):
+                                target_tile.n_lines_see_this_tile += 1
+                                lines_from_single_corner += 1
 
-                        # special case for melee
-                        if np.array_equal(target_tile_corner, hero_tile_corner):
-                            target_tile.in_melee_range = True
+                        target_tile.n_max_lines_from_single_corner = max(target_tile.n_max_lines_from_single_corner,
+                                                                         lines_from_single_corner)
 
-                        if target_tile in tiles_in_line_from_hero:
-                            continue
-                        if not any(tile.type == 'obstacle'
-                                   or tile.type == 'monster'
-                                   or tile.type == 'hero'
-                                   for tile in tiles_in_line_from_hero):
-                            target_tile.n_lines_see_this_tile += 1
-                            lines_from_single_corner += 1
-
-                    target_tile.n_max_lines_from_single_corner = max(target_tile.n_max_lines_from_single_corner,
-                                                                     lines_from_single_corner)
+        for tile in self.get_all_tiles_as_1d_list():
+            tile.update_text()

@@ -5,3 +5,5 @@ draw_text_n_lines_hit_this_tile = False
 draw_text_lines_hit_from_single_corner = False
 draw_los_square = True
 draw_defense_bonus = False
+
+tile_type_change_mode = "obstacle"
