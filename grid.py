@@ -1,4 +1,3 @@
-import numpy as np
 from aux_functions import *
 import config
 
@@ -54,23 +53,23 @@ class Tile(Button):
                 self.text = ""
 
     def get_top_left_corner(self):
-        return np.array([self.grid_pos_x, self.grid_pos_y])
+        return self.grid_pos_x, self.grid_pos_y
 
     def get_top_right_corner(self):
-        return np.array([self.grid_pos_x + 1, self.grid_pos_y])
+        return self.grid_pos_x + 1, self.grid_pos_y
 
     def get_bottom_left_corner(self):
-        return np.array([self.grid_pos_x, self.grid_pos_y + 1])
+        return self.grid_pos_x, self.grid_pos_y + 1
 
     def get_bottom_right_corner(self):
-        return np.array([self.grid_pos_x + 1, self.grid_pos_y + 1])
+        return self.grid_pos_x + 1, self.grid_pos_y + 1
 
     def get_all_corners(self):
         return [self.get_top_left_corner(), self.get_top_right_corner(),
                 self.get_bottom_left_corner(), self.get_bottom_right_corner()]
 
     def get_center(self):
-        return 0.25 * np.sum(self.get_all_corners())
+        return self.grid_pos_x + 0.5, self.grid_pos_y + 0.5
 
 
 class TileGrid(GridLayout):
@@ -80,7 +79,7 @@ class TileGrid(GridLayout):
         self._n_tiles_x, self._n_tiles_y = 8, 8
 
         self._tiles = [[Tile(x, y, self) for y in range(self._n_tiles_y)]
-                        for x in range(self._n_tiles_x)]
+                       for x in range(self._n_tiles_x)]
 
         self._hero_tile = None
 
@@ -151,7 +150,7 @@ class TileGrid(GridLayout):
 
     def get_all_tiles_in_line_discrete(self, start_corner, end_corner):
 
-        corner_diff = end_corner - start_corner
+        corner_diff = (end_corner[0] - start_corner[0], end_corner[1] - start_corner[1])
 
         if corner_diff[0] == 0:
             return self.get_all_tiles_along_vertical_line(start_corner, corner_diff[1])
@@ -214,7 +213,8 @@ class TileGrid(GridLayout):
             raise RuntimeError("invalid use of this function.")
 
         n_tiles_crossed_by_the_line = abs(difference_vector[0])
-        direction = difference_vector // n_tiles_crossed_by_the_line
+        direction = (difference_vector[0] // n_tiles_crossed_by_the_line,
+                     difference_vector[1] // n_tiles_crossed_by_the_line)
 
         x_sum = -1 if direction[0] == -1 else 0
         y_sum = -1 if direction[1] == -1 else 0
@@ -308,7 +308,8 @@ class TileGrid(GridLayout):
                                                                                           target_tile_corner)
 
                             # special case for melee
-                            if np.array_equal(target_tile_corner, hero_tile_corner):
+                            if target_tile_corner[0] == hero_tile_corner[0] and \
+                                    target_tile_corner[1] == hero_tile_corner[1]:
                                 target_tile.in_melee_range = True
 
                             if target_tile in tiles_in_line_from_hero:
