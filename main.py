@@ -1,18 +1,11 @@
-import numpy as np
-
 from grid import TileGrid
 from global_constants import *
 from aux_functions import get_color_by_tile_type
-from checkbox import Checkbox
 import config
-import kivy
 from kivy.app import App as KivyApp
 from kivy.uix.label import Label
-from kivy.uix.gridlayout import GridLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-
-default_font = None
 
 
 class TileChangeModeButton(Button):
