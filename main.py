@@ -23,8 +23,6 @@ class TileChangeModeButton(Button):
         self.background_color = rgb_white
 
     def update_text(self):
-        highlight_factor = 2 if config.tile_type_change_mode == self.type else 1
-        self.font_size = highlight_factor * default_font_size
         self.background_color = get_color_by_tile_type(self.type)
 
     def release_button(self, instance):
