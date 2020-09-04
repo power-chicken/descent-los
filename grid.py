@@ -14,6 +14,9 @@ class Tile(Button):
         self.grid_pos_x = grid_pos_x
         self.grid_pos_y = grid_pos_y
 
+        self.size_hint_y = None
+        self.height = self.width
+
         self.n_lines_see_this_tile = 0
         self.n_max_lines_from_single_corner = 0
         self.in_melee_range = False
