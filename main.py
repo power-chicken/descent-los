@@ -2,8 +2,7 @@ from kivy.app import App as KivyApp
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-
-rgb_gray = (0.5, 0.5, 0.5)
+from global_constants import rgb_gray
 
 
 class TileChangeModeButton(Button):
