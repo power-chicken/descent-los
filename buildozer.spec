@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = Line of Sight Checker3
+title = Line of Sight Checker
 
 # (str) Package name
-package.name = loschecker3
+package.name = loschecker
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.hennemann
