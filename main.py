@@ -53,7 +53,7 @@ class MainWidget(BoxLayout):
         self.tile_grid = TileGrid()
         self.add_widget(self.tile_grid)
 
-        self.add_widget(Label(text="hello this is a test string", size_hint_y=0.05))
+        self.add_widget(Label(text="Descent's 2nd Edition line of sight (Corner to Corner)", size_hint_y=0.05))
 
         self.tile_change_mode_button_box = ChangeTileButtonBox()
         self.tile_change_mode_button_box.size_hint_y = 0.1
