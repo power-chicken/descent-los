@@ -1,8 +1,10 @@
+from global_constants import *
+from aux_functions import get_color_by_tile_type
+import config
 from kivy.app import App as KivyApp
 from kivy.uix.label import Label
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.button import Button
-from global_constants import rgb_gray
 
 
 class TileChangeModeButton(Button):
@@ -11,20 +13,21 @@ class TileChangeModeButton(Button):
 
         self.type = tile_type
         self.text = self.type
-        self.background_color = rgb_gray
+        self.background_color = get_color_by_tile_type(self.type)
 
         self.box_with_other_buttons = box_with_other_buttons
         self.bind(on_press=self.press_button, on_release=self.release_button)
 
     def press_button(self, instance):
-        self.background_color = rgb_gray
+        self.background_color = rgb_white
 
     def update_text(self):
-        highlight_factor = 1
-        self.font_size = highlight_factor * 16
-        self.background_color = rgb_gray
+        highlight_factor = 2 if config.tile_type_change_mode == self.type else 1
+        self.font_size = highlight_factor * default_font_size
+        self.background_color = get_color_by_tile_type(self.type)
 
     def release_button(self, instance):
+        config.tile_type_change_mode = self.type
         self.box_with_other_buttons.update_all_buttons_text()
 
 
@@ -32,7 +35,7 @@ class ChangeTileButtonBox(BoxLayout):
     def __init__(self, **kwargs):
         super(ChangeTileButtonBox, self).__init__(**kwargs)
 
-        self.button_list = [TileChangeModeButton(tile_type, self) for tile_type in ["obstacle", "empty", "monster", "hero"]]
+        self.button_list = [TileChangeModeButton(tile_type, self) for tile_type in tile_types]
 
         for button in self.button_list:
             self.add_widget(button)
