@@ -13,17 +13,17 @@ pixels_per_tile = 40
 grid_line_width = 3
 
 # colors
-rgb_red = (1, 0, 0)
-rgb_blue = (0, 0, 1)
-rgb_green = (0, 1, 0)
-rgb_yellow = (1, 1, 0)
-rgb_orange = (1, 0.6, 0)
-rgb_purple = (0.5, 0, 0.5)
+rgb_red = (1, 0, 0, 1)
+rgb_blue = (0, 0, 1, 1)
+rgb_green = (0, 1, 0, 1)
+rgb_yellow = (1, 1, 0, 1)
+rgb_orange = (1, 0.6, 0, 1)
+rgb_purple = (0.5, 0, 0.5, 1)
 
-rgb_white = (1, 1, 1)
-rgb_gray = (0.5, 0.5, 0.5)
-rgb_brown = (0.6, 0.2, 0.2)
-rgb_black = (0, 0, 0)
+rgb_white = (1, 1, 1, 1)
+rgb_gray = (0.5, 0.5, 0.5, 1)
+rgb_brown = (0.6, 0.2, 0.2, 1)
+rgb_black = (0, 0, 0, 1)
 
 # data
 tile_types = ["empty", "obstacle", "hero", "monster"]
